@@ -10,26 +10,30 @@
 <body>
     <div class="container">
         <h1>OGX-Mini Settings</h1>
-        <div class="connect-ui" id="connect-ui">
-            <button class="connect" id="connect">Connect</button><br><br>
-            <label>To ensure your adapter is in WebApp mode, hold Start + Left Bumper + Right Bumper for 3 seconds.</label>
-            <div class="error">
-                ⚠️ This browser does not support the WebSerial API. Please try a different browser.
-            </div>
+
+        <div id="errorTxt" class="error hide">⚠️ An error occurred</div>
+
+        <div class="connect-ui show" id="connect-ui">
+            <button class="connect" id="connectUsb">Connect via USB</button>
+            <button class="connect" id="connectBt">Connect via Bluetooth</button><br><br>
+            <label><b>Minimum firmware required:</b> OGX-Mini v1.0.0-alpha3 or OGX-Wireless-Lite v2.0.0</label><br><br>
+            <label>To ensure your OGX-Mini adapter is in WebApp mode, hold Start + Left Bumper + Right Bumper for 3 seconds.</label>
         </div>
-        <div class="settings-ui" id="settings-ui">
 
+        <div class="settings-ui hide" id="settings-ui">
             <div class="settings">
-
-                <!-- <div>
-                    <label>Firmware: <span id="firmwareVersion">v1.0.0</span></label>
-                </div> -->
-                <label>Minimum firmware required: v1.0.0</label>
                 <div>
                     <h3>Device Mode</h3>
                 </div>
                 <div class="setting-item">
                     <select id="device-mode"></select>
+                </div>
+
+                <div>
+                    <h3>Gamepads</h3>
+                </div>
+                <div class="setting-item">
+                    <select id="dropdown-playerIdx"></select>
                 </div>
 
                 <div>
@@ -73,6 +77,7 @@
                         <span id="deadzone-trigger-r-value"></span>%
                     </div>
                 </div>
+
                 <h3>Digital Mappings</h3>
                 <h4>D-Pad</h4>
                 <div class="button-map-settings">
@@ -222,6 +227,7 @@
                 </div>
 
                 <label>Saving will reboot your OGX-Mini, the last saved profile will be active.</label><br><br>
+                
                 <button class="settings-button" id="save">Save Profile</button>
                 <button class="settings-button" id="reload">Reload Profile</button>
                 <button class="settings-button" id="load-default">Load Defaults</button>
