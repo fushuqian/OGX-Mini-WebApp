@@ -92,23 +92,23 @@ class BTManager {
     }
 
     async getProfileById(userSettings) {
-        const header = {
+        const setup = {
             deviceMode: userSettings.deviceMode,
             maxGamepads: userSettings.maxGamepads,
             playerIdx: 0xFF,
             profileId: userSettings.profile.profileId,
         }
-        return await this.#readProfile(header, userSettings);
+        return await this.#readProfile(setup, userSettings);
     }
 
     async getProfileByIdx(userSettings) {
-        const header = {
+        const setup = {
             deviceMode: userSettings.deviceMode,
             maxGamepads: userSettings.maxGamepads,
             playerIdx: userSettings.playerIdx,
             profileId: 0xFF,
         }
-        return await this.#readProfile(header, userSettings);
+        return await this.#readProfile(setup, userSettings);
     }
 
     async saveProfile(userSettings) {
@@ -221,11 +221,11 @@ class BTManager {
         return gamepad;
     }
 
-    async #readProfile(header, userSettings) {
+    async #readProfile(setup, userSettings) {
         async function read() {
             let success = await this.#tryWrite(
                 BTManager.UUID.SETUP_READ,
-                new Uint8Array(Object.values(header))
+                new Uint8Array(Object.values(setup))
             );
             if (!success) {
                 console.warn('Failed to write setup packet');
@@ -257,7 +257,7 @@ class BTManager {
             return false;
         }
 
-        userSettings.setProfileFromBytes(bufferIn);
+        userSettings.setProfileFromBytes(bufferIn);  
         console.log('Profile read, ID:', userSettings.profile.profileId);
         this.#mutex.unlock();
         return true;

@@ -29,9 +29,9 @@ export class Gamepad {
 
     setReportFromBytes(data) {
         if (!(data instanceof Uint8Array)) {
-            return logError("Invalid data type.");
-        } else if (data.length !== 23) {
-            return logError("Invalid data length: expected 23 bytes");
+            return console.warn("Invalid data type.");
+        } else if (data.length !== 23 && data.length !== 13) {
+            return console.warn("Invalid data length: expected 23 bytes, actual:", data.length);
         }
     
         const dataView = new DataView(data.buffer);
@@ -47,6 +47,9 @@ export class Gamepad {
             }
     
             offset += size;
+            if (offset > data.length) {
+                break;
+            }
         }
     }    
 
