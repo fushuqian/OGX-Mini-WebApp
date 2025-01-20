@@ -313,6 +313,7 @@ export const BT = {
             
             UI.updateAll(userSettings);
             UI.toggleConnected(true);
+            UI.setSubheaderText("Settings");
 
             UI.addCallbackLoadProfile(async () => {
                 await btManager.getProfileById(userSettings);

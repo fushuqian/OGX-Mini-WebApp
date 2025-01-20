@@ -1,5 +1,6 @@
 import { ESPLoader, Transport } from "https://unpkg.com/esptool-js@0.5.1/bundle.js";
 import { UIProgram } from './../uiProgram.js';
+import { UI } from './../uiSettings.js';
 
 const REPO_OWNER = "wiredopposite";
 const REPO_NAME = "OGX-Mini-WebApp";
@@ -180,6 +181,7 @@ export const UsbEsp32 = {
     async connect() {
         UIProgram.enableProgramEsp32Button(false);
         UIProgram.toggleConnected(true);
+        UI.setSubheaderText("Update");
 
         try {
             let dirHandle = null;

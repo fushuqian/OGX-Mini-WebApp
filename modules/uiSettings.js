@@ -629,4 +629,13 @@ export const UI = {
             console.warn("Connect button not found.");
         }
     },
+
+    setSubheaderText(text) {    
+        const subheader = document.getElementById("subheader");
+        if (subheader) {
+            subheader.querySelector("h3").textContent = text;
+        } else {
+            console.warn("Subheader not found.");
+        }
+    }
 };

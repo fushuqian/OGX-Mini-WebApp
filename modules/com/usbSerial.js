@@ -201,6 +201,7 @@ export const USB = {
 
             UI.updateAll(userSettings);
             UI.toggleConnected(true);
+            UI.setSubheaderText("Settings");
 
             UI.addCallbackLoadProfile(async () => {
                 await usbManager.getProfileById();
