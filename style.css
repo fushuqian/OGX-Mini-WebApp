@@ -63,11 +63,38 @@ select:disabled {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+.separator {
+    display: flex;
+    align-items: center;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    border-bottom: #000000 1px solid;
+}
+
+.programPanel button:disabled {
+    background-color: #e9ecef;
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
+.programLogPanel {
+    margin-top: 20px;
+}
+
 .connectPanel {
     margin-bottom: 20px;
 }
 
-.connectPanel button {
+.connectPanel .separator {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border-bottom: #000000 1px solid;
+}
+
+.connectPanel button,
+.programPanel button {
     background-color: var(--primary-color);
     color: #fff;
     border: none;

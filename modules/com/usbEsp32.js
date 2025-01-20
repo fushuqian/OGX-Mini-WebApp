@@ -1,0 +1,332 @@
+import { ESPLoader, Transport } from "https://unpkg.com/esptool-js@0.5.1/bundle.js";
+import { UIProgram } from './../uiProgram.js';
+
+const REPO_OWNER = "wiredopposite";
+const REPORT_NAME = "OGX-Mini-WebApp";
+const FILE_SUFFIX = "PICO_ESP32.zip";
+const BAUDRATE = 115200;
+const LOG_MAX_LEN = 100;
+const LOG = document.getElementById("programLog");
+const SERIAL_LIB = !navigator.serial && navigator.usb ? serial : navigator.serial;
+
+const terminal = {
+    clean() {
+        LOG.innerHTML = "";
+    },
+    writeLine(data)  {
+        this.write(data + "\n");
+    },
+    write(data) {
+        LOG.innerHTML += data;
+        if (LOG.textContent.split("\n").length > LOG_MAX_LEN + 1) {
+            let logLines = LOG.innerHTML.replace(/(\n)/gm, "").split("<br>");
+            LOG.innerHTML = logLines.splice(-LOG_MAX_LEN).join("<br>\n");
+        }
+        LOG.scrollTop = LOG.scrollHeight;
+    },
+};
+
+async function getRepoContents(owner, repo, path = "", branch = "master") {
+    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
+
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Error fetching repo content: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        return data;
+
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
+}
+
+async function getFwFiles() {
+    // const contents = await getRepoContents(REPO_OWNER, REPORT_NAME, "firmware", "master");
+    // if (!contents) {
+    //     return null;
+    // }
+    const contents = [
+        { name: "bootloader.bin", path: "/firmware/bootloader.bin" },
+        { name: "partition.bin", path: "/firmware/partition.bin" },
+        { name: "OGX-Mini-v1.0.0a3-ESP32.bin", path: "/firmware/OGX-Mini-v1.0.0a3-ESP32.bin" },
+        { name: "OGX-Mini-v1.0.0a3-PICO_ESP32.uf2", path: "/firmware/OGX-Mini-v1.0.0a3-PICO_ESP32.uf2" },
+    ];
+    const files = {
+        uf2: contents.find(file => file.name.startsWith("OGX-Mini") && file.name.endsWith(".uf2")),
+        bootloader: contents.find(file => file.name.startsWith("bootloader") && file.name.endsWith(".bin")),
+        partitionTable: contents.find(file => file.name.startsWith("partition") && file.name.endsWith(".bin")),
+        firmware: contents.find(file => file.name.startsWith("OGX-Mini") && file.name.endsWith(".bin")),
+    };
+    if (!files.uf2 || !files.bootloader || !files.partitionTable || !files.firmware) {
+        console.error("Error: Firmware files not found.");
+        return null;
+    }
+    return files;
+}
+
+async function copyUf2ToPico(dirHandle, uf2File) {
+    if (!uf2File) {
+        return false;
+    }
+
+    try {
+        const response = await fetch(uf2File.path);
+        if (!response.ok) {
+            console.error(`Error fetching UF2: ${response.status} ${response.statusText}`);
+            return false;
+        }
+        const uf2Content = await response.blob();
+        const fileHandle = await dirHandle.getFileHandle(uf2File.name, { create: true });
+        const writable = await fileHandle.createWritable();
+
+        terminal.writeLine("Copying UF2 file...");
+
+        await writable.write(uf2Content);
+        await writable.close();
+
+        terminal.writeLine("UF2 file copied.");
+
+        return true;
+    } catch (error) {
+        console.error("Error: " + error.message);
+    }
+    return false;
+} 
+
+const readFileAsBinaryString = (inputFile) => {
+    const reader = new FileReader();
+
+    return new Promise((resolve, reject) => {
+        reader.onerror = () => {
+            reader.abort();
+            reject(new DOMException("Problem parsing input file."));
+        };
+
+        reader.onload = () => {
+            resolve(reader.result);
+        };
+        reader.readAsBinaryString(inputFile);
+    });
+};
+
+async function getEspInterfaces() {
+    terminal.writeLine("Requesting port...");
+    terminal.writeLine("Please select your OGX-Mini.")
+
+    let device = await SERIAL_LIB.requestPort({});
+    if (!device) {
+        null;
+    }
+
+    const transport = new Transport(device, true);
+
+    const loaderOptions = {
+        transport: transport,
+        baudrate: BAUDRATE,
+        terminal: terminal,
+        debugLogging: false,
+    }
+
+    terminal.writeLine("Connecting to ESP32...");
+
+    const espLoader = new ESPLoader(loaderOptions);
+    let reset_mode = "no_reset";
+
+    const chip = await espLoader.main(reset_mode)
+
+    terminal.writeLine("Connected to ESP32.");
+
+    return { espLoader, transport, chip };
+}
+
+async function programEsp32(files) {
+    const { espLoader, transport, chip } = await getEspInterfaces();
+    if (!espLoader || !transport || !chip) {
+        return false;
+    }
+
+    const flashOptions = {
+        fileArray: [
+            { data: readFileAsBinaryString(await files.bootloader.getFile()), address: 0x1000 },
+            { data: readFileAsBinaryString(await files.partitionTable.getFile()), address: 0x8000 },
+            { data: readFileAsBinaryString(await files.firmware.getFile()), address: 0x10000 },
+        ],
+        flashSize: "keep",
+        eraseAll: false,
+        compress: true,
+        reportProgress: (fileIndex, write, total) => {
+            console.log(`Flashing ${fileIndex + 1} of 3: ${Math.round((write / total) * 100)}%`);
+        },
+        calculateMD5Hash: (image) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image)),
+    };
+
+    terminal.writeLine("\nFlashing firmware...");
+
+    await espLoader.writeFlash(flashOptions);
+
+    const completeFlag = "PROGRAMMING_COMPLETE"
+    const encoder = new TextEncoder();
+    const flagBytes = encoder.encode(completeFlag);
+    await transport.write(flagBytes.buffer);
+
+    terminal.writeLine("Flashing complete.");
+    terminal.writeLine("Unplug your adapter and plug it back in to run the new firmware.");
+    return true;
+}
+
+export const UsbEsp32 = {
+
+    async connect() {
+        UIProgram.enableProgramEsp32Button(false);
+        UIProgram.toggleConnected(true);
+
+        try {
+            let dirHandle = null;
+            let fwFiles = null;
+
+            UIProgram.addProgramPicoCallback(async () => {
+                UIProgram.enableProgramPicoButton(false);
+                try {
+                    terminal.clean();
+                    terminal.writeLine("Select the drive named RPI-RP2");
+
+                    dirHandle = await window.showDirectoryPicker();
+                    if (!dirHandle) {
+                        return;
+                    }
+
+                    fwFiles = await getFwFiles();
+                    if (!fwFiles) {
+                        throw new Error("Error: Firmware files not found.");
+                    }
+
+                    if (!await copyUf2ToPico(dirHandle, fwFiles.uf2)) {
+                        throw new Error("Error: UF2 not copied to Pico.");
+                    }
+
+                    UIProgram.enableProgramEsp32Button(true);
+
+                    terminal.writeLine("Click 'Program Part 2' to finish programming you adapter.");
+
+                } catch (error) {
+                    console.warn("Error: " + error.message);
+                    UIProgram.enableProgramPicoButton(true);
+                }
+            });
+
+            UIProgram.addProgramEsp32Callback(async () => {
+                UIProgram.enableProgramEsp32Button(false);
+                if (!fwFiles) {
+                    throw new Error("Error: Firmware files not found.");
+                }
+
+                if (!await programEsp32(fwFiles)) {
+                    throw new Error("Error: ESP32 not programmed.");
+                }
+            });
+
+        } catch (error) {
+            console.error("Error: " + error.message);
+        }
+    }
+};
+
+
+// connectButton.addEventListener("click", async () => {
+//     if (device === null) {
+//         terminal.writeLine("Requesting port...");
+
+//         device = await serial_lib.requestPort({});
+//         transport = new Transport(device, true);
+//     }
+
+//     try {
+//         const loaderOptions = {
+//             transport: transport,
+//             baudrate: BAUDRATE,
+//             terminal: terminal,
+//             debugLogging: false,
+//         }
+
+//         terminal.writeLine("Connecting to ESP32...");
+
+//         espLoader = new ESPLoader(loaderOptions);
+//         let reset_mode = "no_reset";
+//         chip = await espLoader.main(reset_mode)
+
+//         terminal.writeLine("Connected to ESP32.");
+
+//         flashButton.disabled = false;
+
+//     } catch (error) {
+//         terminal.writeLine(`Error: ${error.message}`);
+//     }
+// });
+
+// flashButton.addEventListener("click", async () => {
+//     flashButton.disabled = true;
+//     try {
+//         terminal.writeLine("Select your ESP32 build folder...");
+//         const directoryHandle = await window.showDirectoryPicker();
+
+//         terminal.writeLine("Searching for firmware files...");
+//         const inputFiles = await findFirmwareFiles(directoryHandle);
+
+//         if (!inputFiles.bootloader || !inputFiles.partitionTable || !inputFiles.firmware) {
+//             terminal.writeLine("Error: Missing required firmware files!");
+//             return;
+//         }
+
+//         terminal.writeLine("Firmware files found:")
+//         terminal.writeLine(" - Bootloader: " + inputFiles.bootloader.name);
+//         terminal.writeLine(" - Partition Table: " + inputFiles.partitionTable.name);
+//         terminal.writeLine(" - Firmware: " + inputFiles.firmware.name);
+//         terminal.writeLine("Preparing for flashing...");
+
+//         const readFileAsBinaryString = (inputFile) => {
+//             const reader = new FileReader();
+
+//             return new Promise((resolve, reject) => {
+//                 reader.onerror = () => {
+//                     reader.abort();
+//                     reject(new DOMException("Problem parsing input file."));
+//                 };
+
+//                 reader.onload = () => {
+//                     resolve(reader.result);
+//                 };
+//                 reader.readAsBinaryString(inputFile);
+//             });
+//         };
+
+//         const fileArray = [
+//             { data: await readFileAsBinaryString(await inputFiles.bootloader.getFile()),     address: 0x1000 },
+//             { data: await readFileAsBinaryString(await inputFiles.partitionTable.getFile()), address: 0x8000 },
+//             { data: await readFileAsBinaryString(await inputFiles.firmware.getFile()),       address: 0x10000 },
+//         ]
+
+//         const flashOptions = {
+//             fileArray: fileArray,
+//             flashSize: "keep",
+//             eraseAll: false,
+//             compress: true,
+//             reportProgress: (fileIndex, write, total) => {
+//                 // terminal.writeLine(`Flashing ${fileIndex + 1} of 3: ${Math.round((write / total) * 100)}%`);
+//             },
+//             calculateMD5Hash: (image) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image)),
+//         };
+
+//         terminal.writeLine("\nFlashing firmware...");
+
+//         await espLoader.writeFlash(flashOptions);
+
+//         terminal.writeLine("Flashing complete.");
+//         terminal.writeLine("Unplug your adapter and plug it back in to run the new firmware.");
+//     } catch (error) {
+//         terminal.writeLine(`Error: ${error.message}`);
+//     }
+//     flashButton.disabled = false;
+// });

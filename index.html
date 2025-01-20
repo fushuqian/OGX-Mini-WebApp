@@ -9,7 +9,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>OGX-Mini Settings</h1>
+        <h1>OGX-Mini</h1>
+        <div class="separator"></div>
 
         <div id="errorTxt" class="error hidden">
             ⚠️ An error occurred
@@ -17,10 +18,29 @@
         </div>
 
         <div class="connectPanel show" id="connectPanel">
+            <h3>Settings</h3>
             <button class="connectButton" id="connectUsb">Connect via USB</button>
             <button class="connectButton" id="connectBt">Connect via Bluetooth</button><br><br>
             <label><b>Minimum firmware required:</b> OGX-Mini v1.0.0-alpha3 or OGX-Wireless-Lite v2.0.0</label><br><br>
             <label>To ensure your OGX-Mini adapter is in WebApp mode, hold Start + Left Bumper + Right Bumper for 3 seconds.</label>
+            <div class="separator"></div>
+            <h3>Update Firmware</h3>
+            <button class="" id="connectOgxmW">OGX-Mini Wireless</button>
+        </div>
+
+        <div class="programPanel hidden" id="programPanel">
+            <label>
+                <b>Step 1:</b> Click 'Program Part 1' and select the 'RPI-RP2' drive from your file explorer.<br>
+                <b>Step 2:</b> Click 'Program Part 2' and select 'OGX-Mini' from the dropdown menu.<br><br>
+                <b>Note:</b> Do not remove your adapter while it is being programmed. If programming fails, remove the adapter and plug it back in while holding the BOOT button, then reload this page to restart the process.<br>
+            </label>
+            <div class="separator"></div>
+            <button id="button-programPico">Program Part 1</button>
+            <button id="button-programEsp32">Program Part 2</button>
+
+            <div class="programLogPanel">
+                <textarea id="programLog" rows="16" cols="80" readonly></textarea>
+            </div>
         </div>
 
         <div class="settingsPanel hidden" id="settingsPanel">
@@ -192,4 +212,5 @@
         </div>
     </div>
     <script type="module" src="index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js"></script>
 </body>

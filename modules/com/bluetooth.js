@@ -1,6 +1,6 @@
 import { BTInterface } from "./bluetoothInterface.js";
 import { UserSettings } from "../userSettings.js";
-import { UI } from "../ui.js";
+import { UI } from "../uiSettings.js";
 import { Gamepad } from "../gamepad.js";
 import { Mutex } from "../mutex.js";
 

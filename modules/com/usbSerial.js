@@ -1,6 +1,6 @@
 import { USBInterface } from "./usbInterface.js";
 import { Gamepad } from "../gamepad.js";
-import { UI } from "../ui.js";
+import { UI } from "../uiSettings.js";
 
 class USBManager {
     static #PACKET_LENGTH = Object.freeze(64);
