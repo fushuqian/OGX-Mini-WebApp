@@ -33,8 +33,7 @@ async function getRepoContents(owner, repo, path = "", branch = "master") {
         if (!response.ok) {
             throw new Error(`Error fetching repo content: ${response.status} ${response.statusText}`);
         }
-        const data = await response.json();
-        console.log(data);
+        const data = await response.json();;
         return data;
 
     } catch (error) {
@@ -160,13 +159,19 @@ async function programEsp32(files) {
     const encoder = new TextEncoder();
     const flagBytes = encoder.encode(completeFlag);
 
-    await transport.write(flagBytes.buffer);
-    // await transport.disconnect();
-    // await transport.waitForUnlock();
+    terminal.writeLine("Sending programming complete flag: " + completeFlag);
+
+    try {
+        await transport.write(flagBytes);
+    } catch (error) {
+        console.error("Error: " + error.message);
+        return false;
+    }
+
+    await transport.disconnect();
+    await transport.waitForUnlock();
 
     terminal.writeLine("Flashing complete.");
-
-    // terminal.writeLine("Unplug your adapter and plug it back in to run the new firmware.");
     return true;
 }
 
