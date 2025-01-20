@@ -160,7 +160,9 @@ select:disabled {
 	margin-top: 10px;
 }
 
-.settingsPanel .togglePanelControl button {
+.settingsPanel .togglePanelControl button,
+.settingsPanel .joystickSettings button,
+.settingsPanel .triggerSettings button {
     background-color: var(--primary-color);
     color: #fff;
     border: none;

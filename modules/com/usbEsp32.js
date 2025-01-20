@@ -44,7 +44,7 @@ async function getRepoContents(owner, repo, path = "", branch = "master") {
 }
 
 async function getFwFiles() {
-    const contents = await getRepoContents(REPO_OWNER, REPO_NAME, "firmware", "master");
+    const contents = await getRepoContents(REPO_OWNER, REPO_NAME, "firmware/PICO_ESP32", "master");
     if (!contents) {
         return null;
     }
