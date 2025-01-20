@@ -35,6 +35,7 @@ async function getRepoContents(owner, repo, path = "", branch = "master") {
             throw new Error(`Error fetching repo content: ${response.status} ${response.statusText}`);
         }
         const data = await response.json();
+        console.log(data);
         return data;
 
     } catch (error) {
@@ -44,26 +45,23 @@ async function getRepoContents(owner, repo, path = "", branch = "master") {
 }
 
 async function getFwFiles() {
-    // const contents = await getRepoContents(REPO_OWNER, REPORT_NAME, "firmware", "master");
-    // if (!contents) {
-    //     return null;
-    // }
-    const contents = [
-        { name: "bootloader.bin", path: "/firmware/bootloader.bin" },
-        { name: "partition.bin", path: "/firmware/partition.bin" },
-        { name: "OGX-Mini-v1.0.0a3-ESP32.bin", path: "/firmware/OGX-Mini-v1.0.0a3-ESP32.bin" },
-        { name: "OGX-Mini-v1.0.0a3-PICO_ESP32.uf2", path: "/firmware/OGX-Mini-v1.0.0a3-PICO_ESP32.uf2" },
-    ];
+    const contents = await getRepoContents(REPO_OWNER, REPORT_NAME, "firmware", "master");
+    if (!contents) {
+        return null;
+    }
+
     const files = {
         uf2: contents.find(file => file.name.startsWith("OGX-Mini") && file.name.endsWith(".uf2")),
         bootloader: contents.find(file => file.name.startsWith("bootloader") && file.name.endsWith(".bin")),
         partitionTable: contents.find(file => file.name.startsWith("partition") && file.name.endsWith(".bin")),
         firmware: contents.find(file => file.name.startsWith("OGX-Mini") && file.name.endsWith(".bin")),
     };
+
     if (!files.uf2 || !files.bootloader || !files.partitionTable || !files.firmware) {
         console.error("Error: Firmware files not found.");
         return null;
     }
+
     return files;
 }
 
@@ -96,32 +94,11 @@ async function copyUf2ToPico(dirHandle, uf2File) {
     return false;
 } 
 
-const readFileAsBinaryString = (inputFile) => {
-    const reader = new FileReader();
-
-    return new Promise((resolve, reject) => {
-        reader.onerror = () => {
-            reader.abort();
-            reject(new DOMException("Problem parsing input file."));
-        };
-
-        reader.onload = () => {
-            resolve(reader.result);
-        };
-        reader.readAsBinaryString(inputFile);
-    });
-};
-
-async function getEspInterfaces() {
+async function programEsp32(files) {
     terminal.writeLine("Requesting port...");
-    terminal.writeLine("Please select your OGX-Mini.")
 
     let device = await SERIAL_LIB.requestPort({});
-    if (!device) {
-        null;
-    }
-
-    const transport = new Transport(device, true);
+    let transport = new Transport(device, true);
 
     const loaderOptions = {
         transport: transport,
@@ -132,33 +109,46 @@ async function getEspInterfaces() {
 
     terminal.writeLine("Connecting to ESP32...");
 
-    const espLoader = new ESPLoader(loaderOptions);
+    let espLoader = new ESPLoader(loaderOptions);
     let reset_mode = "no_reset";
-
-    const chip = await espLoader.main(reset_mode)
+    let chip = await espLoader.main(reset_mode)
 
     terminal.writeLine("Connected to ESP32.");
 
-    return { espLoader, transport, chip };
-}
-
-async function programEsp32(files) {
-    const { espLoader, transport, chip } = await getEspInterfaces();
-    if (!espLoader || !transport || !chip) {
-        return false;
-    }
+    const fetchBinaryString = async (url) => {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch firmware file from ${url}: ${response.status}`);
+        }
+        const arrayBuffer = await response.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        let binaryString = "";
+        for (let i = 0; i < uint8Array.length; i++) {
+            binaryString += String.fromCharCode(uint8Array[i]);
+        }
+        return binaryString;
+    };
+    
+    const bootloaderData = await fetchBinaryString(files.bootloader.download_url);
+    const partitionTableData = await fetchBinaryString(files.partitionTable.download_url);
+    const firmwareData = await fetchBinaryString(files.firmware.download_url);
+    
+    terminal.writeLine("Firmware files found:")
+    terminal.writeLine(" - Bootloader: " + files.bootloader.name);
+    terminal.writeLine(" - Partition Table: " + files.partitionTable.name);
+    terminal.writeLine(" - Firmware: " + files.firmware.name);
 
     const flashOptions = {
         fileArray: [
-            { data: readFileAsBinaryString(await files.bootloader.getFile()), address: 0x1000 },
-            { data: readFileAsBinaryString(await files.partitionTable.getFile()), address: 0x8000 },
-            { data: readFileAsBinaryString(await files.firmware.getFile()), address: 0x10000 },
+            { data: bootloaderData, address: 0x1000 },
+            { data: partitionTableData, address: 0x8000 },
+            { data: firmwareData, address: 0x10000 },
         ],
         flashSize: "keep",
         eraseAll: false,
         compress: true,
         reportProgress: (fileIndex, write, total) => {
-            console.log(`Flashing ${fileIndex + 1} of 3: ${Math.round((write / total) * 100)}%`);
+            // console.log(`Flashing ${fileIndex + 1} of 3: ${Math.round((write / total) * 100)}%`);
         },
         calculateMD5Hash: (image) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image)),
     };
@@ -170,10 +160,14 @@ async function programEsp32(files) {
     const completeFlag = "PROGRAMMING_COMPLETE"
     const encoder = new TextEncoder();
     const flagBytes = encoder.encode(completeFlag);
+
     await transport.write(flagBytes.buffer);
+    // await transport.disconnect();
+    // await transport.waitForUnlock();
 
     terminal.writeLine("Flashing complete.");
-    terminal.writeLine("Unplug your adapter and plug it back in to run the new firmware.");
+
+    // terminal.writeLine("Unplug your adapter and plug it back in to run the new firmware.");
     return true;
 }
 
