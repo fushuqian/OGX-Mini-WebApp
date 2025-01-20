@@ -37,13 +37,14 @@
 
         <div class="programPanel hidden" id="programPanel">
             <label>
-                <b>Step 1:</b> Click 'Program Part 1' and select the 'RPI-RP2' drive from your file explorer.<br>
-                <b>Step 2:</b> Click 'Program Part 2' and select 'OGX-Mini' from the dropdown menu.<br><br>
-                <b>Note:</b> Do not remove your adapter while it is being programmed. If programming fails, remove the adapter and plug it back in while holding the BOOT button, then reload this page to restart the process.<br>
+                <b>Step 1:</b> Hold down the BOOT button on your OGX-Mini while plugging it into your computer.<br>
+                <b>Step 2:</b> Click 'Update Part 1' and select the 'RPI-RP2' drive from your file explorer.<br>
+                <b>Step 3:</b> Click 'Update Part 2' and select 'OGX-Mini' from the dropdown menu.<br><br>
+                <b>Note:</b> Do not remove your adapter while it is being updated. If the update fails, remove the adapter and plug it back in while holding the BOOT button, then reload this page to restart the process.<br>
             </label>
             <div class="separator"></div>
-            <button id="button-programPico">Program Part 1</button>
-            <button id="button-programEsp32">Program Part 2</button>
+            <button id="button-programPico">Update Part 1</button>
+            <button id="button-programEsp32">Update Part 2</button>
 
             <div class="programLogPanel">
                 <textarea id="programLog" rows="16" cols="80" readonly></textarea>

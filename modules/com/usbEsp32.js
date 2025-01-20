@@ -223,8 +223,11 @@ export const UsbEsp32 = {
                     throw new Error("Error: Firmware files not found.");
                 }
 
-                if (!await programEsp32(fwFiles)) {
-                    throw new Error("Error: ESP32 not programmed.");
+                try {
+                    await programEsp32(fwFiles);
+                } catch (error) {
+                    console.warn("Error: " + error.message);
+                    UIProgram.enableProgramEsp32Button(true);
                 }
             });
 
