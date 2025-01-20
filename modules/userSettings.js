@@ -279,16 +279,14 @@ export class UserSettings {
     }
 
     #floatToFix16(value) {
-        let temp = value * 65536;  // Q16.16 scaling
-        // Add rounding like the C implementation
+        let temp = value * 65536;
         temp += (temp >= 0) ? 0.5 : -0.5;
     
-        // Convert to 32-bit signed integer
         const rawValue = temp | 0;
     
         const buffer = new ArrayBuffer(4);
         const view = new DataView(buffer);
-        view.setInt32(0, rawValue, true);  // Little-endian
+        view.setInt32(0, rawValue, true);
     
         return new Uint8Array(buffer);
     }
@@ -299,6 +297,6 @@ export class UserSettings {
         }
         const int32 = new Int32Array(bytes.buffer, bytes.byteOffset, bytes.byteLength / 4);
         const rawValue = int32[0];
-        return rawValue / 0x00010000;  // Q16.16 scaling
+        return rawValue / 0x00010000;
     }
 }

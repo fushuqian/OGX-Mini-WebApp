@@ -2,7 +2,7 @@ import { ESPLoader, Transport } from "https://unpkg.com/esptool-js@0.5.1/bundle.
 import { UIProgram } from './../uiProgram.js';
 
 const REPO_OWNER = "wiredopposite";
-const REPORT_NAME = "OGX-Mini-WebApp";
+const REPO_NAME = "OGX-Mini-WebApp";
 const BAUDRATE = 115200;
 const LOG_MAX_LEN = 100;
 const LOG = document.getElementById("programLog");
@@ -43,7 +43,7 @@ async function getRepoContents(owner, repo, path = "", branch = "master") {
 }
 
 async function getFwFiles() {
-    const contents = await getRepoContents(REPO_OWNER, REPORT_NAME, "firmware", "master");
+    const contents = await getRepoContents(REPO_OWNER, REPO_NAME, "firmware", "master");
     if (!contents) {
         return null;
     }
