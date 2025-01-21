@@ -628,6 +628,12 @@ export const UI = {
         } else {
             console.warn("Connect button not found.");
         }
+        const programButton = document.getElementById("connectOgxmW");
+        if (programButton) {
+            programButton.disabled = !enabled;
+        } else {
+            console.warn("Connect button not found.");
+        }
     },
 
     setSubheaderText(text) {    
@@ -636,6 +642,36 @@ export const UI = {
             subheader.querySelector("h3").textContent = text;
         } else {
             console.warn("Subheader not found.");
+        }
+    },
+
+    getSelectedProfileId() {
+        const elementProfileId = document.getElementById("dropdown-profileId");
+        if (elementProfileId) {
+            return parseInt(elementProfileId.value, 10);
+        } else {
+            console.warn("Profile ID dropdown not found.");
+            return -1;
+        }
+    },
+
+    getSelectedPlayerIdx() {
+        const elementPlayerIdx = document.getElementById("dropdown-playerIdx");
+        if (elementPlayerIdx) {
+            return parseInt(elementPlayerIdx.value, 10);
+        } else {
+            console.warn("Player index dropdown not found.");
+            return -1;
+        }
+    },
+
+    getSelectedDeviceMode() {
+        const elementDeviceMode = document.getElementById("dropdown-deviceMode");
+        if (elementDeviceMode) {
+            return parseInt(elementDeviceMode.value, 10);
+        } else {
+            console.warn("Device mode dropdown not found.");
+            return -1;
         }
     }
 };

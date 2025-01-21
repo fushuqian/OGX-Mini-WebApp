@@ -315,6 +315,12 @@ function applyJoystickSettings(
     diagonalScaleMin, diagonalScaleMax, uncapRadius,
     invertY, invertX
 ) {
+    if (invertY) {
+        y = -y;
+    }
+    if (invertX) {
+        x = -x;
+    }
     // Helper functions
     const rad2deg = (rad) => rad * (180 / Math.PI);
     const deg2rad = (deg) => deg * (Math.PI / 180);

@@ -298,7 +298,9 @@ class BTManager {
 
 export const BT = {
 
-    async connect(userSettings) {
+    async connect() {
+        const userSettings = new UserSettings();
+        UI.init(userSettings);
         const btManager = new BTManager();
 
         try {

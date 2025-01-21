@@ -28,7 +28,6 @@ export class USBInterface {
             console.warn("Writer not initialized.");
             return;
         }
-        console.log("Writing data: ", data);
         return await this.writer.write(data);
     }
 
