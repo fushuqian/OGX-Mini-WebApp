@@ -4,6 +4,7 @@ export class USBInterface {
         this.writer = null;
         this.port = null;
         this.inBuffer = new Uint8Array();
+        this.disconnectCb = null;
     }
 
     async connect(baudrate, filters = null) {
@@ -21,6 +22,10 @@ export class USBInterface {
         this.reader = this.port.readable.getReader();
         this.writer = this.port.writable.getWriter();
         return true;
+    }
+
+    registerDisconnectCb(callback) {
+        this.disconnectCb = callback;
     }
 
     async write(data) {
@@ -65,8 +70,8 @@ export class USBInterface {
 
     async disconnect() {
         try {
-            if (this.reader) this.reader.cancel();
-            if (this.writer) this.writer.releaseLock();
+            if (this.reader) await this.reader.cancel();
+            if (this.writer) await this.writer.releaseLock();
             if (this.port) await this.port.close();
         } catch (error) {
             console.warn("Error disconnecting:", error);
@@ -74,6 +79,7 @@ export class USBInterface {
         this.reader = null;
         this.writer = null;
         this.port = null;
+        if (this.disconnectCb) this.disconnectCb();
     }
 
     isConnected() {

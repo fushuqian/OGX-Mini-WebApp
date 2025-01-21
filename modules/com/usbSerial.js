@@ -7,6 +7,7 @@ class USBManager {
     static #PACKET_LENGTH = Object.freeze(64);
     static #HEADER_LENGTH = Object.freeze(9);
     static #BAUDRATE = Object.freeze(9600); 
+    static #BUFFER_LEN = Object.freeze(1024);
 
     static #PACKET_ID = Object.freeze({
         NONE: 0,
@@ -34,24 +35,31 @@ class USBManager {
     #interface = null;
     #currentBufferInOffset = 0;
     #bufferIn = null;
-    // #bufferOut = null;
     #userSettings = null;
 
     constructor() {
         this.#interface = new USBInterface();
-        this.#bufferIn = new Uint8Array(1024);
-        // this.#bufferOut = new Uint8Array(1024);
+        this.#bufferIn = new Uint8Array(USBManager.#BUFFER_LEN);
     }
 
     async init(userSettings) {
-        this.#userSettings = userSettings;
-        if (await this.#interface.connect(USBManager.#BAUDRATE)) {
-            this.#interface.readTask(USBManager.#PACKET_LENGTH, this.#processPacketIn.bind(this));
-            await this.#sleep(1000);
-            return true;
+        try {
+            this.#userSettings = userSettings;
+
+            if (await this.#interface.connect(USBManager.#BAUDRATE)) {
+                this.#interface.registerDisconnectCb(() => {
+                    window.location.reload();
+                });
+
+                this.#interface.readTask(USBManager.#PACKET_LENGTH, this.#processPacketIn.bind(this));
+                await this.#sleep(1000);
+                return true;
+            }
+        } catch (error) {
+            console.warn('Connection error:', error);
+            await this.#interface.disconnect();
+            return false;
         }
-        this.#interface.disconnect();
-        return false;
     }
 
     async saveProfile() {
@@ -88,7 +96,6 @@ class USBManager {
 
     async disconnect() {
         await this.#interface.disconnect();
-        window.location.reload();
     }
 
     #headerFromUi(packetId) {
@@ -96,7 +103,7 @@ class USBManager {
             packetLen: USBManager.#PACKET_LENGTH,
             packetId: packetId,
             deviceMode: UI.getSelectedDeviceMode(),
-            maxGamepads: 1,
+            maxGamepads: this.#userSettings.maxGamepads,
             playerIdx: UI.getSelectedPlayerIdx(),
             profileId: UI.getSelectedProfileId(),
             chunksTotal: 1,
@@ -106,6 +113,10 @@ class USBManager {
     }
 
     #deserializeHeader(packetData) {
+        if (packetData.length < USBManager.#HEADER_LENGTH) {
+            console.error("Invalid packet data length.");
+            return;
+        }
         const header = {};
         let offset = 0;
         USBManager.#PACKET_HEADER.forEach(field => {
@@ -125,10 +136,11 @@ class USBManager {
         return buffer;
     }
 
-    #processPacketInData(header, dataLen) {
+    #processPacketInData(header, bufferIn, dataLen) {
         switch (header.packetId) {
             case USBManager.#PACKET_ID.GET_PROFILE_BY_IDX:   
-                this.#userSettings.setProfileFromBytes(this.#bufferIn.subarray(0, dataLen));
+                console.log("Received profile data.");
+                this.#userSettings.setProfileFromBytes(bufferIn.subarray(0, dataLen));
                 this.#userSettings.maxGamepads = header.maxGamepads;
                 this.#userSettings.playerIdx = header.playerIdx;
                 this.#userSettings.deviceMode = header.deviceMode;
@@ -136,7 +148,8 @@ class USBManager {
                 break;
 
             case USBManager.#PACKET_ID.GET_PROFILE_BY_ID:
-                this.#userSettings.setProfileFromBytes(this.#bufferIn.subarray(0, dataLen));
+                console.log("Received profile data.");
+                this.#userSettings.setProfileFromBytes(bufferIn.subarray(0, dataLen));
                 this.#userSettings.maxGamepads = header.maxGamepads;
                 this.#userSettings.deviceMode = header.deviceMode;
                 UI.updateAll(this.#userSettings);
@@ -144,7 +157,7 @@ class USBManager {
 
             case USBManager.#PACKET_ID.SET_GP_IN:
                 const gamepad = new Gamepad();
-                gamepad.setReportFromBytes(this.#bufferIn.subarray(0, dataLen));
+                gamepad.setReportFromBytes(bufferIn.subarray(0, dataLen));
                 UI.drawGamepadInput(gamepad, this.#userSettings);
                 break;
 
@@ -155,12 +168,12 @@ class USBManager {
     }
 
     #processPacketIn(data) {
-        if (data[0] !== 64) {
+        if (data[0] !== USBManager.#PACKET_LENGTH) {
             console.warn(`Invalid packet length: ${data[0]}`);
             return;
         }
         const header = this.#deserializeHeader(data);
-        // console.log("Received Header: ", header);
+
         this.#bufferIn.set(
             data.subarray(
                 USBManager.#HEADER_LENGTH, 
@@ -170,8 +183,10 @@ class USBManager {
 
         this.#currentBufferInOffset += header.chunkLen;
 
+        console.log("Received packet: " + (header.chunkIdx + 1) + " of " + header.chunksTotal);    
+
         if (header.chunkIdx + 1 === header.chunksTotal) {
-            this.#processPacketInData(header, this.#currentBufferInOffset);
+            this.#processPacketInData(header, this.#bufferIn, this.#currentBufferInOffset);
             this.#currentBufferInOffset = 0;
         }
     }
@@ -198,7 +213,7 @@ class USBManager {
                 USBManager.#HEADER_LENGTH
             );
 
-            console.log("Writing chunk: " + i + " of " + chunksTotal);
+            console.log("Writing packet: " + (i + 1) + " of " + chunksTotal);
 
             await this.#interface.write(buffer);
             currentOffset += chunkLen;
