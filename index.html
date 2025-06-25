@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>OGX-Mini Settings</title>
+    <title>手柄转换器配置</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <div class="header">
             <div>
-                <h1>OGX-Mini</h1>
+                <h1>OGX-Mini 手柄转换器</h1>
             </div>
             <div id="subheader" class="subheader">
                 <h3></h3>
@@ -20,19 +20,19 @@
         <div class="separator"></div>
 
         <div id="errorTxt" class="error hidden">
-            ⚠️ An error occurred
+            ⚠️ 出现错误
             <br>
         </div>
 
         <div class="connectPanel show" id="connectPanel">
-            <h3>Settings</h3>
-            <button class="connectButton" id="connectUsb">Connect via USB</button>
-            <button class="connectButton" id="connectBt">Connect via Bluetooth</button><br><br>
-            <label><b>Minimum firmware required:</b> OGX-Mini v1.0.0-alpha3</label><br><br>
-            <label><b>Note:</b> To ensure your OGX-Mini (wired) adapter is in WebApp mode, hold Start + Left Bumper + Right Bumper for 3 seconds.</label>
+            <h3>设置</h3>
+            <button class="connectButton" id="connectUsb">通过USB连接</button>
+            <button class="connectButton" id="connectBt">通过蓝牙连接</button><br><br>
+            <label><b>最低固件版本需求:</b> OGX-Mini v1.0.0-alpha3</label><br><br>
+            <label><b>注意:</b> 长按手柄上的 START+LB+RB 3秒钟进入网页配置模式。</label>
             <div class="separator"></div>
-            <h3>Update Firmware</h3>
-            <button class="" id="connectOgxmW">OGX-Mini Wireless</button>
+            <h3>固件更新</h3>
+            <button class="" id="connectOgxmW">无线手柄转换器</button>
         </div>
 
         <div class="programPanel hidden" id="programPanel">
@@ -57,7 +57,7 @@
             <div class="triPanel">
                 <div class="section">
                     <div class="header">
-                        <h3>Device Mode</h3>
+                        <h3>设备模式</h3>
                     </div>
                     <div class="dropDown">
                         <select id="dropdown-deviceMode"></select>
@@ -65,24 +65,24 @@
                 </div>
                 <div class="section">
                     <div class="header">
-                        <h3>Gamepads</h3>
+                        <h3>手柄</h3>
                     </div>
                     <div class="dropDown">
                         <select id="dropdown-playerIdx"></select>
                     </div>
                 </div>
                 <div class="section">
-                    <h3>Profile</h3>
+                    <h3>配置文件</h3>
                     <select id="dropdown-profileId"></select>
                 </div>
             </div>
 
             <div class="togglePanelControl">
                 <div class="header">
-                    <h3>Axis Settings</h3>
+                    <h3>轴设置</h3>
                 </div>
                 <div class="buttonPanel">
-                    <button id="button-toggleAxisSettings">Hide</button>
+                    <button id="button-toggleAxisSettings">隐藏</button>
                 </div>
             </div>
 
@@ -91,10 +91,10 @@
                     <div class="leftPanel">
                         <div class="headerButtonPair">
                             <div class="header">
-                                <h4>Left Joystick</h4>
+                                <h4>左摇杆</h4>
                             </div>
                             <div class="button">
-                                <label for="checkbox-previewJoy-left">Preview</label>
+                                <label for="checkbox-previewJoy-left">预览</label>
                                 <input type="checkbox" id="checkbox-previewJoy-left" class="invertCheckbox">
                             </div>
                         </div>
@@ -110,10 +110,10 @@
                     <div class="rightPanel">
                         <div class="headerButtonPair">
                             <div class="header">
-                                <h4>Right Joystick</h4>
+                                <h4>右摇杆</h4>
                             </div>
                             <div class="button">
-                                <label for="checkbox-previewJoy-right">Preview</label>
+                                <label for="checkbox-previewJoy-right">预览</label>
                                 <input type="checkbox" id="checkbox-previewJoy-right" class="invertCheckbox">
                             </div>
                         </div>
@@ -132,10 +132,10 @@
                     <div class="leftPanel">
                         <div class="headerButtonPair">
                             <div class="header">
-                                <h4>Left Trigger</h4>
+                                <h4>左扳机</h4>
                             </div>
                             <div class="button">
-                                <label for="checkbox-previewTrigger-left">Preview</label>
+                                <label for="checkbox-previewTrigger-left">预览</label>
                                 <input type="checkbox" id="checkbox-previewTrigger-left" class="invertCheckbox">
                             </div>
                         </div>
@@ -151,10 +151,10 @@
                     <div class="rightPanel">
                         <div class="headerButtonPair">
                             <div class="header">
-                                <h4>Right Trigger</h4>
+                                <h4>右扳机</h4>
                             </div>
                             <div class="button">
-                                <label for="checkbox-previewTrigger-right">Preview</label>
+                                <label for="checkbox-previewTrigger-right">预览</label>
                                 <input type="checkbox" id="checkbox-previewTrigger-right" class="invertCheckbox">
                             </div>
                         </div>
@@ -172,21 +172,21 @@
 
             <div class="togglePanelControl">
                 <div class="header">
-                    <h3>Digital Mappings</h3>
+                    <h3>数码映射</h3>
                 </div>
                 <div class="buttonPanel">
-                    <button id="button-toggleDigitalButtons">Hide</button>
+                    <button id="button-toggleDigitalButtons">隐藏</button>
                 </div>
             </div>
 
             <div id="digitalButtonsPanel" class="digitalButtonsPanel">
-                <h4>D-Pad</h4>
+                <h4>方向键</h4>
                 <div class="dropdownGrid">
                     <div id="digitalDpadInput-left" class="digitalDpadInput"></div>
                     <div id="digitalDpadInput-right" class="digitalDpadInput"></div>
                 </div>
 
-                <h4>Buttons</h4>
+                <h4>按键</h4>
                 <div class="dropdownGrid">
                     <div id="digitalButtonInput-left" class="digitalButtonInput"></div>
                     <div id="digitalButtonInput-right" class="digitalButtonInput"></div>
@@ -195,16 +195,16 @@
 
             <div class="togglePanelControl">
                 <div class="header">
-                    <h3>Analog Mappings</h3>
+                    <h3>模拟映射</h3>
                 </div>
                 <div class="buttonPanel">
-                    <button id="button-toggleAnalogButtons">Hide</button>
+                    <button id="button-toggleAnalogButtons">隐藏</button>
                 </div>
             </div>
 
             <div id="analogButtonsPanel" class="analogButtonsPanel">
                 <div class="analogEnabled">
-                    <label for="checkbox-analogEnabled">Enable Analog Buttons</label>
+                    <label for="checkbox-analogEnabled">启用模拟按键</label>
                     <input type="checkbox" id="checkbox-analogEnabled" class="invertCheckbox">
                 </div> 
                 <div class="dropdownGrid">
@@ -214,10 +214,10 @@
             </div>
 
             <div class="controlsPanel">
-                <button class="controlsButton" id="button-saveProfile">Save Profile</button>
-                <button class="controlsButton" id="button-reloadProfile">Reload Profile</button>
-                <button class="controlsButton" id="button-loadDefaults">Load Defaults</button>
-                <button class="controlsButton" id="button-disconnect">Disconnect</button>
+                <button class="controlsButton" id="button-saveProfile">保存配置文件</button>
+                <button class="controlsButton" id="button-reloadProfile">重新读取配置</button>
+                <button class="controlsButton" id="button-loadDefaults">恢复默认</button>
+                <button class="controlsButton" id="button-disconnect">断开连接</button>
             </div>
         </div>
     </div>
